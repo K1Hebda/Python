@@ -48,10 +48,7 @@ def hanoi_iterative(n, source, destination, buffer):
                 step2 += 1
             elif destination and (not buffer or destination[-1] < buffer[-1]):
                 buffer.append(destination.pop())
-                step2 += 1
-
-
-        
+                step2 += 1 
 
 # Input the number of elements for the Hanoi tower
 n = int(input("How many elements does the Hanoi tower have? "))
