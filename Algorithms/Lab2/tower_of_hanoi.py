@@ -24,7 +24,6 @@ def hanoi_iterative(n, source, destination, buffer):
     if n % 2 == 0:
         destination, buffer = buffer, destination
 
-   # while source or destination :
     while not (len(destination) == n or len(buffer) == n) :
 
         if step2 % 3 == 0:
