@@ -1,8 +1,8 @@
+from os import strerror
 from tkinter import *
 import random
-from os import strerror
 
-def chose_word():
+def choose_word():
     try:
         with open('new.txt', 'r', encoding='utf-8') as file:
             text = file.read()
@@ -12,10 +12,25 @@ def chose_word():
     except IOError as e:
         print("Błąd IO", strerror(e.errno))
 
+def submit_word(entry_word, submit_button, label, label_image):
+    word1 = entry_word.get()
+    if word1 == "":
+        label.config(text="Podaj ponownie słowo! ")
+    else:
+        entry_word.destroy()
+        submit_button.destroy()
+        label.config(text="Podaj literę!")
+        label_var = Label(new_window, text="", font=('Comic Sans MS', 14), bg="#D1C79A")
+        label_word = Label(new_window, text="", font=('Comic Sans MS', 14), bg="#D1C79A")
+        entry_letter = Entry(new_window, font=('Comic Sans MS', 14))
+        check_letter(word1, entry_letter, label_var, label_word, label_image)
 
-
-def check_letter(word, entry_letter, label_var, label_word):
+def check_letter(word, entry_letter, label_var, label_word, label_image, choose_mode=0):
+    man_list = [PhotoImage(file=f"resources\man{num:d}.png") for num in range(1, 11)]
     count = 0
+    label_image.config(image=man_list[count])
+    label_loss_or_win=Label(new_window, text="Przegrałeś ", font=('Comic Sans MS', 30), bg="#D1C79A")
+
     word_n = ['_' for _ in range(len(word))]
     label_var.pack()
     label_word.pack()
@@ -26,7 +41,7 @@ def check_letter(word, entry_letter, label_var, label_word):
         nonlocal word_n
 
         letter = entry_letter.get().lower()
-        entry_letter.delete(0, END)  # Clear the Entry widget after getting the letter
+        entry_letter.delete(0, END)
 
         found = False
         for index, char in enumerate(word):
@@ -36,7 +51,9 @@ def check_letter(word, entry_letter, label_var, label_word):
 
         if not found:
             count += 1
-            label_var.config(text=f"Błędna litera. Pozostało prób: {8 - count}")
+            label_var.config(text=f"Błędna litera. Pozostało prób: {9 - count}")
+            if count < 10:
+                label_image.config(image=man_list[count])
         else:
             label_var.config(text=f"Poprawna litera!")
 
@@ -44,23 +61,30 @@ def check_letter(word, entry_letter, label_var, label_word):
 
         if "".join(word_n) == word:
             label_var.config(text="Gratulacje! Odnalazłeś słowo:")
-        elif count >= 8:
+        elif count >= 9:
             label_var.config(text=f"Przekroczyłeś limit prób. Prawidłowe słowo to: {word}")
+            label_image.destroy()
+            submit_button.config(state="disabled")
+            label_loss_or_win.pack()
+            new_game_button=Button(new_window, text="Nowa gra",width=10,height=1, font=('Comic Sans MS', 14), command=lambda: singleplayer_window(new_window) if choose_mode else multiplayer_window(new_window))
+            new_game_button.pack()
 
-    submit_button = Button(new_window, text="Submit", command=submit_letter)
+
+    submit_button = Button(new_window, text="Zatwierdź",width=10,height=1,font=('Comic Sans MS', 14), command=submit_letter)
     submit_button.pack()
+
+    label_image.pack()
 
 def multiplayer_window(main_window):
     global new_window
-    new_window = Tk()
-    main_window.destroy()
-
+    new_window = Toplevel(main_window)
+    main_window.withdraw()  # Ukryj pierwotne okno
     new_window.geometry("800x600")
     new_window.title("Wisielec- Tryb Automatyczny")
     new_window.config(background='#D1C79A')
 
     label = Label(new_window,
-                  text="Wisielec- podaj literę!",
+                  text="Podaj słowo do odgadnięcia!",
                   font=('Comic Sans MS', 20, 'bold'),
                   bg="#8A8365",
                   relief="ridge",
@@ -69,13 +93,20 @@ def multiplayer_window(main_window):
                   pady=10,
                   )
     label.pack()
+
+    label_image = Label(new_window, bg="#8A8365")
+    entry_word = Entry(new_window, font=('Comic Sans MS', 14), show="*")
+    submit_button = Button(new_window, text="Zatwierdź", command=lambda: submit_word(entry_word, submit_button, label, label_image))
+    entry_word.pack()
+    submit_button.pack()
+
     new_window.mainloop()
 
 def singleplayer_window(main_window):
     global new_window
-    new_window = Tk()
-    main_window.destroy()
-
+    choose_mode=1
+    new_window = Toplevel(main_window)
+    main_window.withdraw()  # Ukryj pierwotne okno
     new_window.geometry("800x600")
     new_window.title("Wisielec- Tryb Własne Słowo")
     new_window.config(background='#D1C79A')
@@ -91,12 +122,13 @@ def singleplayer_window(main_window):
                   )
     label.pack()
 
-    word = chose_word()
+    word = choose_word()
     label_var = Label(new_window, text="", font=('Comic Sans MS', 14), bg="#D1C79A")
     label_word = Label(new_window, text="", font=('Comic Sans MS', 14), bg="#D1C79A")
     entry_letter = Entry(new_window, font=('Comic Sans MS', 14))
 
-    check_letter(word, entry_letter, label_var, label_word)
+    label_image = Label(new_window, bg="#8A8365")
+    check_letter(word, entry_letter, label_var, label_word, label_image, choose_mode)
 
     new_window.mainloop()
 
@@ -121,29 +153,30 @@ def main_window():
     main_frame = Frame(window)
     main_frame.place(relx=0.5, rely=0.5, anchor="n")
 
-    Button(main_frame, 
-            text="Tryb Automatyczny",
-            command=lambda: singleplayer_window(window),
-            font=('Comic Sans MS', 25, 'bold'),
-            bg="#8A8365",
-            relief="ridge",
-            bd=10,
-            padx=7,
-            pady=7,
-            width=15).pack(side=RIGHT)
-    
-    Button(main_frame, 
-            text="Tryb Własne Słowo", 
-            command=lambda: multiplayer_window(window),
-            font=('Comic Sans MS', 25, 'bold'),
-            bg="#8A8365",
-            relief="ridge",
-            bd=10,
-            padx=7,
-            pady=7,
-            width=15).pack(side=RIGHT)
+    Button(main_frame,
+           text="Tryb Automatyczny",
+           command=lambda: singleplayer_window(window),
+           font=('Comic Sans MS', 25, 'bold'),
+           bg="#8A8365",
+           relief="ridge",
+           bd=10,
+           padx=7,
+           pady=7,
+           width=15).pack(side=RIGHT)
+
+    Button(main_frame,
+           text="Tryb Własne Słowo",
+           command=lambda: multiplayer_window(window),
+           font=('Comic Sans MS', 25, 'bold'),
+           bg="#8A8365",
+           relief="ridge",
+           bd=10,
+           padx=7,
+           pady=7,
+           width=15).pack(side=RIGHT)
 
     label.place(relx=0.5, rely=0.02, anchor="n")
     window.mainloop()
 
-main_window()
+if __name__ == "__main__":
+    main_window()
